@@ -8,6 +8,7 @@ import (
 	"github.com/elastic/go-elasticsearch/v6"
 	"github.com/elastic/go-elasticsearch/v6/esapi"
 	"os"
+	"strconv"
 	"strings"
 )
 
@@ -26,6 +27,9 @@ func main() {
 	}
 	c, err := elasticsearch.NewClient(cfg)
 	checkErr(err)
+	//for i := 0; i < 20; i++ {
+	//insert(c, i)
+	//}
 	//create(c)
 	//setMapping(c)
 	//delete(c)
@@ -33,6 +37,10 @@ func main() {
 	//return
 
 	query := map[string]interface{}{
+		"query": map[string]interface{}{
+			"match_all": struct{}{},
+		},
+		"size": 0,
 		"aggs": map[string]interface{}{
 			"group": map[string]interface{}{
 				"terms": map[string]string{
@@ -56,10 +64,10 @@ func main() {
 
 }
 
-func insert(c *elasticsearch.Client) {
+func insert(c *elasticsearch.Client, i int) {
 	req := esapi.IndexRequest{
 		Index:      "test",
-		DocumentID: "uuid",
+		DocumentID: "uuid" + strconv.Itoa(i),
 		Body:       strings.NewReader("{\"key\":\"value\",\"field\":123}"),
 		Refresh:    "true",
 	}
