@@ -1,4 +1,4 @@
-module es
+module es-demo
 
 go 1.12
 
