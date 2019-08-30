@@ -19,7 +19,7 @@ func checkErr(err error) {
 func main() {
 	cfg := elasticsearch.Config{
 		Addresses: []string{
-			"http://127.0.0.1:9200",
+			"http://172.16.208.78:9200",
 		},
 	}
 	c, err := elasticsearch.NewClient(cfg)
@@ -27,23 +27,35 @@ func main() {
 
 	query := map[string]interface{}{
 		"query": map[string]interface{}{
-			//"match_all": struct{}{},
-			"terms": map[string]interface{}{
-				//"_id": []string{"50001"},
-				"uid": getUids(),
+			"bool": map[string]interface{}{
+				"must": map[string]interface{}{
+					"terms": map[string]interface{}{
+						"uid": getUids(),
+					},
+				},
+				"filter": map[string]interface{}{
+					"range": map[string]interface{}{
+						"day": map[string]int{
+							"gt": 20190805,
+							"lt": 20190820,
+						},
+					},
+				},
 			},
-			//"range": map[string]interface{}{
-			//"day": map[string]int{
-			//"gt": 20190805,
-			//"lt": 20190820,
-			//},
-			//},
 		},
-		"size": 200,
+		"size": 0,
 		"aggs": map[string]interface{}{
 			"group": map[string]interface{}{
-				"terms": map[string]string{
+				"terms": map[string]interface{}{
 					"field": "uid",
+					"size":  1,
+				},
+				"aggs": map[string]interface{}{
+					"reted": map[string]interface{}{
+						"top_hits": map[string]interface{}{
+							"size": 1,
+						},
+					},
 				},
 			},
 		},
@@ -52,6 +64,9 @@ func main() {
 	var buf bytes.Buffer
 	err = json.NewEncoder(&buf).Encode(query)
 	checkErr(err)
+
+	buf.Reset()
+	buf.Write([]byte("select count(*) from test"))
 
 	begin := time.Now()
 	res, err := c.Search(
@@ -62,7 +77,7 @@ func main() {
 	defer res.Body.Close()
 
 	checkErr(err)
-	//fmt.Println(res)
+	fmt.Println(res)
 
 }
 

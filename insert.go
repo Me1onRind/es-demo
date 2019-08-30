@@ -34,7 +34,7 @@ func checkErr(err error) {
 func main() {
 	cfg := elasticsearch.Config{
 		Addresses: []string{
-			"http://127.0.0.1:9200",
+			"http://172.16.208.78:9200",
 		},
 	}
 	c, err := elasticsearch.NewClient(cfg)
@@ -46,14 +46,15 @@ func main() {
 	split := int(10000000 / 30)
 	var jsonBuf, bodyBuf bytes.Buffer
 	for i := 0; i < 10000000; i++ {
-		for j := 0; j < 2000; j, i = j+1, i+1 {
-			day = day + int(i/split)
+		for j := 0; j < 5000; j, i = j+1, i+1 {
+			d := day + int(i/split)
 			bodyBuf.Write([]byte("{\"create\":{\"_index\":\"test\",\"_id\":" + strconv.Itoa(i) + "}\n"))
-			data := getData(i, day)
+			data := getData(i, d)
 			json.NewEncoder(&jsonBuf).Encode(data)
 			bodyBuf.Write(jsonBuf.Bytes())
 			jsonBuf.Reset()
 		}
+		i--
 		insert(c, &bodyBuf)
 		bodyBuf.Reset()
 		fmt.Println(i)
