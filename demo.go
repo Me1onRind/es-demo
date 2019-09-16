@@ -53,7 +53,7 @@ func deleteTable() {
 
 func insertSingle() {
 	body := map[string]interface{}{
-		"num": 123,
+		"num": 0,
 		"str": "test",
 	}
 	jsonBody, _ := json.Marshal(body)
@@ -85,8 +85,8 @@ func insertBatch() {
 		bodyBuf.WriteByte('\n')
 
 		body := map[string]interface{}{
-			"num": 123,
-			"str": "test",
+			"num": i % 3,
+			"str": "test" + strconv.Itoa(i),
 		}
 		jsonStr, _ = json.Marshal(body)
 		bodyBuf.Write(jsonStr)
@@ -96,7 +96,20 @@ func insertBatch() {
 	req := esapi.BulkRequest{
 		Body: &bodyBuf,
 	}
-	fmt.Println(string(bodyBuf.Bytes()))
+	res, err := req.Do(context.Background(), c)
+	checkError(err)
+	defer res.Body.Close()
+	fmt.Println(res.String())
+}
+
+func selectBySql() {
+	query := map[string]interface{}{
+		"query": "select count(*) as cnt, max(str) as s, num from test_index where num > 1 group by num, str limit 2",
+	}
+	jsonBody, _ := json.Marshal(query)
+	req := esapi.XPackSQLQueryRequest{
+		Body: bytes.NewReader(jsonBody),
+	}
 	res, err := req.Do(context.Background(), c)
 	checkError(err)
 	defer res.Body.Close()
@@ -104,8 +117,9 @@ func insertBatch() {
 }
 
 func main() {
-	//createTable()
 	//deleteTable()
+	//createTable()
 	//insertSingle()
 	//insertBatch()
+	selectBySql()
 }
